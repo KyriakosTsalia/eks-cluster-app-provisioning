@@ -1,0 +1,156 @@
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    hosts: []
+    paths:
+      - "/monitor/prometheus(/|$)(.*)"
+    pathType: Prefix
+  prometheusSpec:
+    externalUrl: "https://0.0.0.0/monitor/prometheus"
+    affinity: 
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: group
+              operator: In
+              values:
+              - monitoring
+    tolerations:
+    - key: "group"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+
+grafana:
+  env:
+    GF_SERVER_ROOT_URL: https://0.0.0.0/monitor/grafana
+    GF_SERVER_SERVE_FROM_SUB_PATH: 'true'
+  # username is 'admin' by default
+  # adminPassword is 'prom-operator' by default
+  ingress:
+    ingressClassName: nginx
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    hosts: []
+    path: "/monitor/grafana(/|$)(.*)"
+    pathType: Prefix
+  # override default affinity and tolerations values from the grafana sub-chart
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: group
+            operator: In
+            values:
+            - monitoring
+  tolerations:
+  - key: "group"
+    operator: "Equal"
+    value: "monitoring"
+    effect: "NoSchedule"
+
+alertmanager:
+  ingress:
+    ingressClassName: nginx
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    hosts: []
+    paths: 
+    - "/monitor/alertmanager(/|$)(.*)"
+    pathType: Prefix
+  alertmanagerSpec:
+    externalUrl: "https://0.0.0.0/monitor/alertmanager"
+    affinity: 
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: group
+              operator: In
+              values:
+              - monitoring
+    tolerations:
+    - key: "group"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+
+prometheusOperator:
+  admissionWebhooks:
+    patch:    
+      affinity: 
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: group
+                operator: In
+                values:
+                - monitoring
+      tolerations:
+      - key: "group"
+        operator: "Equal"
+        value: "monitoring"
+        effect: "NoSchedule"
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: group
+            operator: In
+            values:
+            - monitoring
+  tolerations:
+  - key: "group"
+    operator: "Equal"
+    value: "monitoring"
+    effect: "NoSchedule"
+
+thanosRuler:
+  thanosRulerSpec:
+    affinity: 
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: group
+              operator: In
+              values:
+              - monitoring
+    tolerations:
+    - key: "group"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+
+# override default affinity and tolerations values from the kube-state-metrics sub-chart
+kube-state-metrics: 
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: group
+            operator: In
+            values:
+            - monitoring
+  tolerations:
+  - key: "group"
+    operator: "Equal"
+    value: "monitoring"
+    effect: "NoSchedule"
+
+kubeEtcd:
+  service:
+    targetPort: 2381
